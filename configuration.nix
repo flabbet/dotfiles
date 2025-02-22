@@ -22,6 +22,7 @@
   fi
 
   '';
+  boot.loader.grub.default = "saved";
 
   networking.hostName = "nixos-flabbet"; # Define your hostname.
   # Pick only one of the below networking options.
@@ -73,24 +74,70 @@
        tree
        git
      ];
+     shell = pkgs.zsh;
    };
+
 
   programs.firefox.enable = true;
   programs.hyprland.enable=true;
+  programs.zsh = {
+    enable = true;
+    autosuggestions.enable = true;
+    zsh-autoenv.enable = true;
+    syntaxHighlighting.enable = true;
+  };
 
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  programs.zsh.ohMyZsh = {
+    enable = true;
+    plugins = [ "git" "sudo" ];
+    theme = "half-life";
+  };
+
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true;
+  };
+
+  programs.virt-manager.enable = true;
+  users.groups.libvirtd.members = ["flabbet"];
+  virtualisation.libvirtd.enable = true;
+  virtualisation.spiceUSBRedirection.enable = true;
+
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
    environment.systemPackages = with pkgs; [
      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+     unzip
      neovim
      wget
      kitty
      dolphin
      rofi
-     dunst
-     waybar
+     dunst # notifications
+     gh
+     rclone
+     keepassxc
+     lshw # disk and devices information
+     spotify
+     home-manager
+     swww
+     wl-gammarelay-rs
+     jetbrains.rider
+     discord
+     obs-studio
+     vlc
+     virtiofsd
+     xclip
+     playerctl
+     pavucontrol
+   ];
+
+   fonts.packages = with pkgs; [ 
+   fira-code
+   nerdfonts 
    ];
 
    nixpkgs.config.allowUnfree = true;
@@ -103,7 +150,64 @@
 
    };
 
+   security.pam.services.hyprlock = {};
    services.blueman.enable = true;
+
+services.xserver.enable = true;
+  services.xserver.displayManager.gdm.enable = true;
+  services.xserver.desktopManager.gnome.enable = true;
+
+environment.gnome.excludePackages = with pkgs; [
+    orca
+    evince
+    # file-roller
+    geary
+    gnome-disk-utility
+    # seahorse
+    # sushi
+    # sysprof
+    #
+    # gnome-shell-extensions
+    #
+    # adwaita-icon-theme
+    # nixos-background-info
+    gnome-backgrounds
+    # gnome-bluetooth
+    # gnome-color-manager
+    # gnome-control-center
+    # gnome-shell-extensions
+    gnome-tour # GNOME Shell detects the .desktop file on first log-in.
+    gnome-user-docs
+    # glib # for gsettings program
+    # gnome-menus
+    # gtk3.out # for gtk-launch program
+    # xdg-user-dirs # Update user dirs as described in https://freedesktop.org/wiki/Software/xdg-user-dirs/
+    # xdg-user-dirs-gtk # Used to create the default bookmarks
+    #
+    baobab
+    epiphany
+    gnome-text-editor
+    gnome-calculator
+    gnome-calendar
+    gnome-characters
+    # gnome-clocks
+    gnome-console
+    gnome-contacts
+    gnome-font-viewer
+    gnome-logs
+    gnome-maps
+    gnome-music
+    # gnome-system-monitor
+    gnome-weather
+    # loupe
+    # nautilus
+    gnome-connections
+    simple-scan
+    snapshot
+    totem
+    yelp
+    gnome-software
+  ];
 
    services.xserver.videoDrivers = ["nvidia"];
    hardware.nvidia = {
@@ -112,6 +216,21 @@
    nvidiaSettings = true;
    package = config.boot.kernelPackages.nvidiaPackages.stable;
    open = false;
+   };
+
+   environment.etc."rclone-mnt.conf".text = (builtins.readFile ./gdrive-rclone.conf);
+   fileSystems."/mnt/gdrive" = {
+   
+   device = "gdrive:/";
+   fsType = "rclone";
+   options = [
+    "nodev"
+    "nofail"
+    "allow_other"
+    "args2env"
+    "config=/etc/rclone-mnt.conf"
+   ];
+  
    };
 
   # Some programs need SUID wrappers, can be configured further or are
