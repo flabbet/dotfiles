@@ -31,6 +31,7 @@
 
   # Set your time zone.
   time.timeZone = "Europe/Warsaw";
+  time.hardwareClockInLocalTime = true;
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -80,6 +81,8 @@
    };
 
 
+
+
   programs.firefox.enable = true;
   programs.hyprland.enable=true;
   programs.zsh = {
@@ -113,7 +116,6 @@
    environment.systemPackages = with pkgs; [
      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
      unzip
-     neovim
      wget
      kitty
      dolphin
@@ -135,6 +137,9 @@
      xclip
      playerctl
      pavucontrol
+     tailscale
+     appstream
+     flatpak-builder
    ];
 
    fonts.packages = with pkgs; [ 
@@ -144,6 +149,7 @@
 
    nixpkgs.config.allowUnfree = true;
 
+   hardware.opentabletdriver.enable = true;
    hardware.graphics.enable = true;
    hardware.bluetooth = {
    
@@ -152,8 +158,16 @@
 
    };
 
-   security.pam.services.hyprlock = {};
+   security.pam.services = {
+     hyprlock = {};
+   };
+   security.polkit.enable = true;
    services.blueman.enable = true;
+   services.flatpak.enable = true;
+
+
+services.tailscale.enable = true;
+services.tailscale.useRoutingFeatures = "client";
 
 # below enables gnome
 /*
@@ -219,8 +233,9 @@ environment.gnome.excludePackages = with pkgs; [
 
    modesetting.enable = true;
    nvidiaSettings = true;
-   package = config.boot.kernelPackages.nvidiaPackages.stable;
-   open = false;
+   package = config.boot.kernelPackages.nvidiaPackages.latest;
+   open = true;
+   powerManagement.enable = true;
    };
 
    environment.etc."rclone-mnt.conf".text = (builtins.readFile ./gdrive-rclone.conf);
@@ -237,6 +252,17 @@ environment.gnome.excludePackages = with pkgs; [
    ];
   
    };
+
+   networking.firewall = {
+  # enable the firewall
+  enable = true;
+
+  # always allow traffic from your Tailscale network
+  trustedInterfaces = [ "tailscale0" ];
+
+  # allow the Tailscale UDP port through the firewall
+  allowedUDPPorts = [ config.services.tailscale.port ];
+};
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

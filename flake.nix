@@ -14,28 +14,35 @@
     };
 
      hyprpanel.url = "github:Jas-SinghFSU/HyprPanel";
+     
+     nixvim = {
+    url = "github:nix-community/nixvim";
+    # If you are not running an unstable channel of nixpkgs, select the corresponding branch of nixvim.
+    # url = "github:nix-community/nixvim/nixos-24.11";
+
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
   };
 
-  outputs = inputs@{ nixpkgs, home-manager, hyprpanel, ... }: {
+  outputs = inputs@{ nixpkgs, home-manager, ... }: {
     nixosConfigurations = {
       nixos-flabbet = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
+	specialArgs = { 
+	inherit inputs; 
+	};
         modules = [
           ./configuration.nix
 
-          # make home-manager as a module of nixos
-          # so that home-manager configuration will be deployed automatically when executing `nixos-rebuild switch`
           home-manager.nixosModules.home-manager
           {
-            home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+	    home-manager.backupFileExtension = "backup";
 
             home-manager.users.flabbet = import ./home.nix;
-
-	    nixpkgs.overlays = [ inputs.hyprpanel.overlay ];
-            # Optionally, use home-manager.extraSpecialArgs to pass arguments to home.nix
+	    home-manager.extraSpecialArgs = { inherit inputs; }; 
           }
-        ];
+        ]; 
       };
     };
   };

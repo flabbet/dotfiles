@@ -1,5 +1,4 @@
-{ config, lib, pkgs, inputs, ... }:
-
+{ lib, pkgs, inputs,   ... }:
 let
   variant = "frappe";
   accent = "blue";
@@ -7,10 +6,17 @@ let
     inherit variant accent;
   };
 in {
+imports = [ inputs.hyprpanel.homeManagerModules.hyprpanel inputs.nixvim.homeManagerModules.nixvim ];
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "flabbet";
   home.homeDirectory = "/home/flabbet";
+nixpkgs = {
+    config = {
+      allowUnfree = true;
+      allowUnfreePredicate = (_: true);
+    };
+  };
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -40,16 +46,41 @@ in {
     # (pkgs.writeShellScriptBin "my-hello" ''
     #   echo "Hello, ${config.home.username}!"
     # '')
+    hyprpanel
     libsForQt5.qtstyleplugin-kvantum
     libsForQt5.qt5ct
     papirus-folders
+    feh
+    wl-clipboard
+    grimblast
+    grim
+    wf-recorder
+    hyprpicker
+    jq
+    slurp
+    bc
+    nextcloud-client
+    vscode
+    hyprpolkitagent
+    obsidian
+    python3
 (catppuccin-kvantum.override {
       variant = "${variant}";
       accent = "${accent}";
     })
-	hyprpanel
     ];
 
+programs.nixvim = {
+    enable = true;
+
+    colorschemes.catppuccin.enable = true;
+    plugins = {
+      nix.enable = true;
+      lsp.enable = true;
+      lsp-format.enable = true;
+      lualine.enable = true;
+    };
+};
 
 gtk = {
     enable = true;
@@ -93,6 +124,7 @@ iconTheme = {
     "Kvantum/catppuccin-${variant}-${accent}".source = "${kvantumThemePackage}/share/Kvantum/catppuccin-${variant}-${accent}";
   };
 
+
 home.pointerCursor = {
     gtk.enable = true;
     name = "Catppuccin-Macchiato-Dark-Cursors";
@@ -113,6 +145,80 @@ home.pointerCursor = {
     #   org.gradle.daemon.idletimeout=3600000
     # '';
   };
+
+  programs.hyprpanel = {
+    enable = true;
+    overlay.enable = true;
+    overwrite.enable = true;
+
+    layout = {
+      "bar.layouts" = {
+        "1" = {
+           left = [ "dashboard" "workspaces" "windowtitle"];
+	   middle = ["media" "cava"];
+	   right = [ "volume" "network" "bluetooth" "systray" "clock" "notifications"];
+	};
+	"0" = {
+            left = ["dashboard" "workspaces" "windowtitle"];
+            middle = ["cava"];
+            right = ["volume" "clock" "notifications"];
+	};
+      };
+    };
+
+    settings = {
+    bar = {
+    workspaces.show_icons = true;
+    workspaces.showApplicationIcons = true;
+    launcher = {
+      autoDetectIcon = true;
+    };
+    network.label = false;
+    };
+
+    menus.clock = {
+        time = {
+           hideSeconds = true;
+	   military = true;
+	};
+	weather = {
+          location = "Warsaw";
+	  unit = "metric";
+	};
+    };
+
+    menus.dashboard = {
+
+    powermenu.avatar.image = "/home/flabbet/Pictures/face.icon";
+
+    shortcuts.left = {
+    shortcut1.command = "firefox";
+    shortcut1.icon = "";
+    shortcut1.tooltip = "Firefox";
+    shortcut2.command = "spotify";
+    shortcut4.command = "~/.config/rofi/launchers/type-5/launcher.sh";
+    };
+
+    directories.left = {
+        directory1.command = "bash -c \"xdg-open $HOME\"";
+	directory1.label = "󱂵 Home";
+        directory2.command = "bash -c \"xdg-open $HOME/Git\"";
+	directory2.label = " Git";
+        directory3.command = "bash -c \"xdg-open $HOME/Git/PixiEditor\"";
+	directory3.label = "󰚝 PixiEditor";
+    };
+    directories.right = {
+        directory1.command = "bash -c \"dolphin /mnt/gdrive\"";
+	directory1.label = "󰉎 Google Drive";
+        directory2.command = "bash -c \"dolphin $HOME/Nextcloud\"";
+	directory2.label = "󰴋 NextCloud";
+        directory3.command = "bash -c \"xdg-open $HOME/Pobrane\"";
+	directory3.label = "󰉍 Downloads";
+
+    };
+    };
+};
+};
 
   
   programs.kitty = lib.mkForce {
@@ -162,6 +268,13 @@ home.pointerCursor = {
     }
   ];
  };
+};
+
+xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+	"inode/directory" = "org.kde.dolphin.desktop";
+    };
 };
 
   # Home Manager can also manage your environment variables through
